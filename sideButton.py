@@ -9,7 +9,7 @@ GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 ### commands/actions
 BATTERY = '/home/user/./battery.sh'
-BACKLIGHT = 'python /home/user/backlight.py'
+BACKLIGHT = 'python /home/user/backlight.py --toggle'
 
 last_press_time = 0
 press_count = 0
@@ -27,10 +27,10 @@ def short_press():
 
 def long_press():
     print("Pression longue détectée")
-    os.system(BATTERY)
-    batteryPercent = read_file('/sys/firmware/beepy/battery_percent')
-    batteryPercent = '% Battery = ' + batteryPercent
-    os.system(f'echo "{batteryPercent}" | wall')
+    #os.system(BATTERY)
+    #batteryPercent = read_file('/sys/firmware/beepy/battery_percent')
+    #batteryPercent = '% Battery = ' + batteryPercent
+    #os.system(f'echo "{batteryPercent}" | wall')
 
 def double_press():
     print("Double pression détectée")
