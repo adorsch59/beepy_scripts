@@ -1,14 +1,86 @@
+#!/usr/bin/env python3
+
 import RPi.GPIO as GPIO
 import os
-GPIO.setmode(GPIO.BCM) 
+import sys
+import argparse
+
+# Setup GPIO
+GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT)
 
-if not os.path.exists('/tmp/backlight'):
-	print('backlight is off')	
-	GPIO.output(18, GPIO.HIGH)  # Turn on the LED
-	os.mknod('/tmp/backlight')
+def get_backlight_status():
+    """
+    Vérifie le statut actuel du rétroéclairage en se basant sur l'existence de /tmp/backlight.
+    Retourne "ON" si le fichier existe, "OFF" sinon.
+    """
+    if os.path.exists('/tmp/backlight'):
+        return "ON"
+    else:
+        return "OFF"
 
-else:
-	print('backlight is on')	
-	GPIO.output(18, GPIO.LOW)  # Turn off the LED
-	os.remove('/tmp/backlight')
+def set_backlight(status):
+    """
+    Définit l'état du rétroéclairage sur "on" ou "off".
+    Met à jour l'état du GPIO et le fichier de statut /tmp/backlight.
+    """
+    if status == "on":
+        GPIO.output(18, GPIO.HIGH)  # Allume la LED
+        if not os.path.exists('/tmp/backlight'):
+            os.mknod('/tmp/backlight')
+        print("Backlight turned ON.")
+    elif status == "off":
+        GPIO.output(18, GPIO.LOW)   # Éteint la LED
+        if os.path.exists('/tmp/backlight'):
+            os.remove('/tmp/backlight')
+        print("Backlight turned OFF.")
+
+def main():
+    parser = argparse.ArgumentParser(description="Contrôle le rétroéclairage via GPIO.")
+    parser.add_argument(
+        "--on",
+        action="store_true",
+        help="Allume le rétroéclairage."
+    )
+    parser.add_argument(
+        "--off",
+        action="store_true",
+        help="Éteint le rétroéclairage."
+    )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Affiche le statut actuel du rétroéclairage (ON/OFF)."
+    )
+    parser.add_argument(
+        "--toggle",
+        action="store_true",
+        help="Change l'état du rétroéclairage (ON vers OFF, OFF vers ON)."
+    )
+    
+    args = parser.parse_args()
+    
+    # If no arguments are provided, act as if --toggle was specified
+    if not any(vars(args).values()):
+        args.toggle = True
+        
+    if args.on:
+        set_backlight("on")
+    elif args.off:
+        set_backlight("off")
+    elif args.status:
+        status = get_backlight_status()
+        print(f"{status}")
+    elif args.toggle:
+        current_status = get_backlight_status()
+        if current_status == "ON":
+            set_backlight("off")
+        else:
+            set_backlight("on")
+    else:
+        # Si aucun argument n'est fourni ou si des arguments invalides sont passés, affiche l'aide.
+        parser.print_help()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
