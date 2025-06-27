@@ -35,6 +35,9 @@ function enable_beepy_display() {
     for line in "${HDMI_LINES[@]}"; do
         sudo sed -i "/^${line}/s/^/#/" "$CONFIG_FILE"
     done
+        
+    # modifier le cmdline.txt
+    sudo cp cmdline.txt/cmdline.txt_beepy /boot/cmdline.txt 
 
     echo "Modification de $CONFIG_FILE terminée. Un redémarrage est nécessaire."
     echo "Pour redémarrer maintenant, exécutez: sudo reboot"
@@ -53,6 +56,9 @@ function enable_hdmi_display() {
         sudo sed -i "/^${line}/s/^/#/" "$CONFIG_FILE"
     done
 
+    # modifier le cmdline.txt
+    sudo cp cmdline.txt/cmdline.txt_hdmi /boot/cmdline.txt 
+    
     echo "Modification de $CONFIG_FILE terminée. Un redémarrage est nécessaire."
     echo "Pour redémarrer maintenant, exécutez: sudo reboot"
 }
