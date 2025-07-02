@@ -16,9 +16,9 @@ def get_backlight_status():
     Retourne "ON" si le fichier existe, "OFF" sinon.
     """
     if os.path.exists('/tmp/backlight'):
-        return "ON"
+        return "on"
     else:
-        return "OFF"
+        return "off"
 
 def set_backlight(status):
     """
@@ -62,9 +62,6 @@ def main():
     args = parser.parse_args()
 
     try:
-        # If no arguments are provided, act as if --toggle was specified
-        #if not any(vars(args).values()):
-        #    args.toggle = True
 
         if args.on:
             set_backlight("on")
