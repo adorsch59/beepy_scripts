@@ -63,8 +63,8 @@ def main():
 
     try:
         # If no arguments are provided, act as if --toggle was specified
-        if not any(vars(args).values()):
-            args.toggle = True
+        #if not any(vars(args).values()):
+        #    args.toggle = True
 
         if args.on:
             set_backlight("on")
