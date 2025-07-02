@@ -133,20 +133,20 @@ wifi_menu() {
                 fi
                 # Ajout et connexion via wpa_cli
                 network_id=$(wpa_cli add_network | grep -E '^[0-9]+$')
-                sudo wpa_cli set_network "$network_id" ssid "\"$ssid\""
-                sudo wpa_cli set_network "$network_id" psk "\"$password\""
-                sudo wpa_cli enable_network "$network_id"
-                sudo wpa_cli select_network "$network_id"
-                sudo wpa_cli save_config
+                sudo wpa_cli -i wlan0 set_network "$network_id" ssid "\"$ssid\""
+                sudo wpa_cli -i wlan0 set_network "$network_id" psk "\"$password\""
+                sudo wpa_cli -i wlan0 enable_network "$network_id"
+                sudo wpa_cli -i wlan0 select_network "$network_id"
+                sudo wpa_cli -i wlan0 save_config
                 sleep 5
-                if wpa_cli status | grep -q "wpa_state=COMPLETED"; then
+                if sudo wpa_cli -i wlan0 status | grep -q "wpa_state=COMPLETED"; then
                     whiptail --title "WiFi" --msgbox "Connected to $ssid." 10 50
                 else
                     whiptail --title "WiFi" --msgbox "Failed to connect to $ssid." 10 50
                 fi
                 ;;
             S)
-                sudo wpa_cli disconnect
+                sudo wpa_cli -i wlan0 disconnect
                 whiptail --title "WiFi" --msgbox "WiFi has been disconnected." 10 50
                 ;;
             Q)
