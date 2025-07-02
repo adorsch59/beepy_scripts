@@ -318,22 +318,22 @@ while true; do
 
     choix=$(whiptail --title "$current_time - Battery: $battery_percent% - IP: $local_ip" --menu "Choose an option" 15 50 6 \
     "W" "$wifi_menu_label" \
-    "E" "$bluetooth_menu_label" \
-    "R" "Display" \
-    "S" "$backlight_menu_label" \
+    "S" "$bluetooth_menu_label" \
+    "Z" "Display" \
+    "E" "$backlight_menu_label" \
     "Q" "Quit" 3>&1 1>&2 2>&3)
 
     case $choix in
         W)
             wifi_menu
             ;;
-        E)
+        S)
             bluetooth_menu
             ;;
-        R)
+        Z)
             display_menu
             ;;
-        S)
+        E)
             backlight_menu
             ;;
         Q)
