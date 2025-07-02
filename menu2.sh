@@ -92,7 +92,7 @@ wifi_menu() {
             ap_status="Connected to: $current_ssid"
         fi
 
-        wifi_choix=$(whiptail --title "WiFi Options" --menu "$ap_status" 15 60 5 \
+        wifi_choix=$(whiptail --title "WiFi Options" --menu "$ap_status" 15 50 5 \
         "W" "$toggle_option" \
         "E" "List nearby WiFi networks" \
         "R" "Connect to a WiFi network" \
@@ -111,7 +111,7 @@ wifi_menu() {
                 ;;
             E)
                 networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
-                whiptail --title "Nearby WiFi Networks" --msgbox "$networks" 20 60
+                whiptail --title "Nearby WiFi Networks" --msgbox "$networks" 20 50
                 ;;
             R)
                 networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
@@ -121,12 +121,12 @@ wifi_menu() {
                     menu_items+=("$i" "$ssid")
                     i=$((i+1))
                 done <<< "$networks"
-                ssid_choice=$(whiptail --title "Select WiFi" --menu "Choose SSID" 20 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+                ssid_choice=$(whiptail --title "Select WiFi" --menu "Choose SSID" 20 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
                 if [ -z "$ssid_choice" ]; then
                     continue
                 fi
                 ssid=$(echo "$networks" | sed -n "${ssid_choice}p")
-                password=$(whiptail --title "WiFi Password" --passwordbox "Enter password for $ssid:" 10 60 3>&1 1>&2 2>&3)
+                password=$(whiptail --title "WiFi Password" --passwordbox "Enter password for $ssid:" 10 50 3>&1 1>&2 2>&3)
                 if [ -z "$password" ]; then
                     whiptail --title "WiFi" --msgbox "No password entered." 10 50
                     continue
@@ -161,7 +161,7 @@ wifi_menu() {
 # Sous-menu gestion des appareils Bluetooth
 bluetooth_devices_menu() {
     while true; do
-        bt_choice=$(whiptail --title "Bluetooth Devices" --menu "Choose an action" 20 60 7 \
+        bt_choice=$(whiptail --title "Bluetooth Devices" --menu "Choose an action" 20 50 7 \
         "W" "Make device visible" \
         "E" "Make device invisible" \
         "R" "Scan for nearby devices" \
@@ -181,7 +181,7 @@ bluetooth_devices_menu() {
                 ;;
             R)
                 scan_output=$(timeout 10s bluetoothctl scan on | grep Device | awk '{$1=$2=""; print $0}' | sort | uniq)
-                whiptail --title "Nearby Bluetooth Devices" --msgbox "${scan_output:-No devices found.}" 20 60
+                whiptail --title "Nearby Bluetooth Devices" --msgbox "${scan_output:-No devices found.}" 20 50
                 ;;
             S)
                 devices=$(timeout 10s bluetoothctl scan on | grep Device | awk '{print $2 " " substr($0, index($0,$3))}' | sort | uniq)
@@ -195,7 +195,7 @@ bluetooth_devices_menu() {
                     whiptail --title "Bluetooth" --msgbox "No devices found." 10 50
                     continue
                 fi
-                mac_choice=$(whiptail --title "Connect Bluetooth" --menu "Select device to connect" 20 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+                mac_choice=$(whiptail --title "Connect Bluetooth" --menu "Select device to connect" 20 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
                 if [ -n "$mac_choice" ]; then
                     sudo bluetoothctl pair "$mac_choice"
                     sudo bluetoothctl connect "$mac_choice" && \
@@ -205,7 +205,7 @@ bluetooth_devices_menu() {
                 ;;
             D)
                 connected=$(bluetoothctl devices Connected | awk '{print $2 " " substr($0, index($0,$3))}')
-                whiptail --title "Connected Bluetooth Devices" --msgbox "${connected:-No connected devices.}" 20 60
+                whiptail --title "Connected Bluetooth Devices" --msgbox "${connected:-No connected devices.}" 20 50
                 ;;
             F)
                 connected=$(bluetoothctl devices Connected | awk '{print $2 " " substr($0, index($0,$3))}')
@@ -219,7 +219,7 @@ bluetooth_devices_menu() {
                     whiptail --title "Bluetooth" --msgbox "No connected devices." 10 50
                     continue
                 fi
-                mac_choice=$(whiptail --title "Disconnect Bluetooth" --menu "Select device to disconnect" 20 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+                mac_choice=$(whiptail --title "Disconnect Bluetooth" --menu "Select device to disconnect" 20 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
                 if [ -n "$mac_choice" ]; then
                     sudo bluetoothctl disconnect "$mac_choice"
                     whiptail --title "Bluetooth" --msgbox "Disconnected from $mac_choice." 10 50
