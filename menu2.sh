@@ -78,7 +78,17 @@ wifi_menu() {
             wifi_status="off"
             toggle_option="WiFi [on|OFF]"
         fi
-        current_ssid=$(nmcli -t -f active,ssid dev wifi | grep '^yes:' | cut -d: -f2)
+
+        # Scan des réseaux WiFi avec iwlist
+        networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
+        menu_items=()
+        i=1
+        while read -r ssid; do
+            menu_items+=("$i" "$ssid")
+            i=$((i+1))
+        done <<< "$networks"
+
+        current_ssid=$(wpa_cli status | grep ^ssid= | cut -d= -f2)
         if [ -z "$current_ssid" ]; then
             ap_status="Not connected"
         else
@@ -103,33 +113,40 @@ wifi_menu() {
                 fi
                 ;;
             E)
-                networks=$(nmcli -t -f SSID,SIGNAL device wifi list | awk -F: '{printf "%s (%s%%)\n", $1, $2}' | grep -v '^$')
-                whiptail --title "Nearby WiFi Networks" --msgbox "$networks" 20 60
+                list_display=$(printf "%s\n" $networks)
+                whiptail --title "Nearby WiFi Networks" --msgbox "$list_display" 20 60
                 ;;
             R)
-                ssid_list=$(nmcli -t -f SSID device wifi list | grep -v '^$' | sort | uniq)
-                menu_items=()
-                i=1
-                while read -r ssid; do
-                    menu_items+=("$i" "$ssid")
-                    i=$((i+1))
-                done <<< "$ssid_list"
+                if [ ${#menu_items[@]} -eq 0 ]; then
+                    whiptail --title "WiFi" --msgbox "No networks found." 10 50
+                    continue
+                fi
                 ssid_choice=$(whiptail --title "Select WiFi" --menu "Choose SSID" 20 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
                 if [ -z "$ssid_choice" ]; then
                     continue
                 fi
-                ssid=$(echo "$ssid_list" | sed -n "${ssid_choice}p")
+                ssid=$(echo "$networks" | sed -n "${ssid_choice}p")
                 password=$(whiptail --title "WiFi Password" --passwordbox "Enter password for $ssid:" 10 60 3>&1 1>&2 2>&3)
                 if [ -z "$password" ]; then
                     whiptail --title "WiFi" --msgbox "No password entered." 10 50
                     continue
                 fi
-                nmcli device wifi connect "$ssid" password "$password" ifname wlan0 && \
-                    whiptail --title "WiFi" --msgbox "Connected to $ssid." 10 50 || \
+                # Ajout du réseau à wpa_supplicant
+                network_id=$(wpa_cli add_network | grep -E '^[0-9]+$')
+                wpa_cli set_network "$network_id" ssid "\"$ssid\""
+                wpa_cli set_network "$network_id" psk "\"$password\""
+                wpa_cli enable_network "$network_id"
+                wpa_cli select_network "$network_id"
+                wpa_cli save_config
+                sleep 5
+                if wpa_cli status | grep -q "wpa_state=COMPLETED"; then
+                    whiptail --title "WiFi" --msgbox "Connected to $ssid." 10 50
+                else
                     whiptail --title "WiFi" --msgbox "Failed to connect to $ssid." 10 50
+                fi
                 ;;
             S)
-                nmcli device disconnect wlan0
+                wpa_cli disconnect
                 whiptail --title "WiFi" --msgbox "WiFi has been disconnected." 10 50
                 ;;
             Q)
@@ -141,6 +158,8 @@ wifi_menu() {
         esac
     done
 }
+
+# ...existing code...
 
 # Sous-menu gestion des appareils Bluetooth
 bluetooth_devices_menu() {
