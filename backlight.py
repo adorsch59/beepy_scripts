@@ -60,28 +60,30 @@ def main():
     )
     
     args = parser.parse_args()
-    
-    # If no arguments are provided, act as if --toggle was specified
-    if not any(vars(args).values()):
-        args.toggle = True
-        
-    if args.on:
-        set_backlight("on")
-    elif args.off:
-        set_backlight("off")
-    elif args.status:
-        status = get_backlight_status()
-        print(f"{status}")
-    elif args.toggle:
-        current_status = get_backlight_status()
-        if current_status == "ON":
-            set_backlight("off")
-        else:
-            set_backlight("on")
-    else:
-        # Si aucun argument n'est fourni ou si des arguments invalides sont passés, affiche l'aide.
-        parser.print_help()
-        sys.exit(1)
 
+    try:
+        # If no arguments are provided, act as if --toggle was specified
+        if not any(vars(args).values()):
+            args.toggle = True
+
+        if args.on:
+            set_backlight("on")
+        elif args.off:
+            set_backlight("off")
+        elif args.status:
+            status = get_backlight_status()
+            print(f"{status}")
+        elif args.toggle:
+            current_status = get_backlight_status()
+            if current_status == "ON":
+                set_backlight("off")
+            else:
+                set_backlight("on")
+        else:
+            parser.print_help()
+            sys.exit(1)
+    finally:
+        GPIO.cleanup()
+        
 if __name__ == "__main__":
     main()
