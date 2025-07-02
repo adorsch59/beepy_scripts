@@ -204,7 +204,7 @@ bluetooth_devices_menu() {
                 fi
                 ;;
             D)
-                connected=$(bluetoothctl devices Connected | awk '{print $2 " " substr($0, index($0,$3))}')
+                connected=$(bluetoothctl devices | awk '{print $2 " " substr($0, index($0,$3))}')
                 whiptail --title "Connected Bluetooth Devices" --msgbox "${connected:-No connected devices.}" 20 50
                 ;;
             F)
