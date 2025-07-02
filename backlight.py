@@ -83,7 +83,7 @@ def main():
             parser.print_help()
             sys.exit(1)
     finally:
-        GPIO.cleanup()
+        pass #GPIO.cleanup()
         
 if __name__ == "__main__":
     main()
