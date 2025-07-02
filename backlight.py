@@ -75,7 +75,7 @@ def main():
             print(f"{status}")
         elif args.toggle:
             current_status = get_backlight_status()
-            if current_status == "ON":
+            if current_status == "on":
                 set_backlight("off")
             else:
                 set_backlight("on")
