@@ -184,7 +184,7 @@ bluetooth_devices_menu() {
                 whiptail --title "Nearby Bluetooth Devices" --msgbox "${scan_output:-No devices found.}" 20 50
                 ;;
             S)
-                devices=$(timeout 10s bluetoothctl scan on | grep Device | awk '{print $2 " " substr($0, index($0,$3))}' | sort | uniq)
+                devices=$(timeout 10s bluetoothctl scan on | grep Device | awk '{print $3 " " substr($0, index($0,$3))}' | sort | uniq)
                 menu_items=()
                 while read -r line; do
                     mac=$(echo "$line" | awk '{print $1}')
