@@ -31,7 +31,7 @@ is_bluetooth_on() {
 
 # Fonction pour vérifier si le rétroéclairage est activé (retourne 0 si ON, 1 si OFF)
 is_backlight_on() {
-    if python3 /home/user/backlight.py --status | grep -q "ON"; then
+    if python3 backlight.py --status | grep -q "ON"; then
         return 0
     else
         return 1
@@ -46,10 +46,10 @@ display_menu() {
 
     case $display_choix in
         W)
-            /home/user/display.sh hdmi
+            display.sh hdmi
             ;;
         E)
-            /home/user/display.sh beepy
+            display.sh beepy
             ;;
         *)
             whiptail --title "Error" --msgbox "Invalid choice." 10 50
@@ -292,10 +292,10 @@ backlight_menu() {
         case $backlight_choix in
             W)
                 if [ "$backlight_status" = "ON" ]; then
-                    python3 /home/user/backlight.py --off
+                    python3 backlight.py --off
                     whiptail --title "Backlight" --msgbox "Backlight has been turned off." 10 50
                 else
-                    python3 /home/user/backlight.py --on
+                    python3 backlight.py --on
                     whiptail --title "Backlight" --msgbox "Backlight has been turned on." 10 50
                 fi
                 ;;
