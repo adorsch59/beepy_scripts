@@ -14,6 +14,9 @@ create /etc/systemd/system/sideButton.service
 
 ```
 `systemctl daemon-reload`
+
 `systemctl enable sideButton.service`
+
 `systemctl start sideButton.service`
+
 `systemctl status sideButton.service`
