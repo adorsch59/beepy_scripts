@@ -132,7 +132,7 @@ wifi_menu() {
                     continue
                 fi
                 # Ajout et connexion via wpa_cli
-                network_id=$(wpa_cli add_network | grep -E '^[0-9]+$')
+                network_id=$(sudo wpa_cli -i wlan0 add_network | grep -E '^[0-9]+$')
                 sudo wpa_cli -i wlan0 set_network "$network_id" ssid "\"$ssid\""
                 sudo wpa_cli -i wlan0 set_network "$network_id" psk "\"$password\""
                 sudo wpa_cli -i wlan0 enable_network "$network_id"
