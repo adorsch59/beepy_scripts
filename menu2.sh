@@ -7,12 +7,15 @@ get_local_ip() {
 
 # Fonction pour vérifier si le WiFi est activé (retourne 0 si ON, 1 si OFF)
 is_wifi_on() {
-    if ifconfig wlan0 | grep -q "UP"; then
-        return 0
-    else
-        return 1
-    fi
+    ip link show wlan0 | grep -q "state UP"
+    return $?
 }
+
+# Fonction pour obtenir le SSID courant (sans nmcli)
+get_current_ssid() {
+    grep '^ssid=' /etc/wpa_supplicant/wpa_supplicant.conf | head -n1 | cut -d= -f2 | tr -d '"'
+}
+
 
 # Fonction pour vérifier si le Bluetooth est activé (retourne 0 si ON, 1 si OFF)
 is_bluetooth_on() {
@@ -69,6 +72,7 @@ display_menu() {
 }
 
 # Sous-menu WiFi avec toggle et affichage AP connecté
+# Sous-menu WiFi avec toggle et affichage AP connecté
 wifi_menu() {
     while true; do
         if is_wifi_on; then
@@ -79,16 +83,7 @@ wifi_menu() {
             toggle_option="WiFi [on|OFF]"
         fi
 
-        # Scan des réseaux WiFi avec iwlist
-        networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
-        menu_items=()
-        i=1
-        while read -r ssid; do
-            menu_items+=("$i" "$ssid")
-            i=$((i+1))
-        done <<< "$networks"
-
-        current_ssid=$(wpa_cli status | grep ^ssid= | cut -d= -f2)
+        current_ssid=$(iw dev wlan0 link | grep SSID | awk '{print $2}')
         if [ -z "$current_ssid" ]; then
             ap_status="Not connected"
         else
@@ -105,22 +100,25 @@ wifi_menu() {
         case $wifi_choix in
             W)
                 if [ "$wifi_status" = "ON" ]; then
-                    sudo ifconfig wlan0 down
+                    sudo ip link set wlan0 down
                     whiptail --title "WiFi" --msgbox "WiFi has been turned off." 10 50
                 else
-                    sudo ifconfig wlan0 up
+                    sudo ip link set wlan0 up
                     whiptail --title "WiFi" --msgbox "WiFi has been turned on." 10 50
                 fi
                 ;;
             E)
-                list_display=$(printf "%s\n" $networks)
-                whiptail --title "Nearby WiFi Networks" --msgbox "$list_display" 20 60
+                networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
+                whiptail --title "Nearby WiFi Networks" --msgbox "$networks" 20 60
                 ;;
             R)
-                if [ ${#menu_items[@]} -eq 0 ]; then
-                    whiptail --title "WiFi" --msgbox "No networks found." 10 50
-                    continue
-                fi
+                networks=$(sudo iwlist wlan0 scan | grep 'ESSID' | sed 's/.*ESSID:"\(.*\)"/\1/' | grep -v '^$' | sort | uniq)
+                menu_items=()
+                i=1
+                while read -r ssid; do
+                    menu_items+=("$i" "$ssid")
+                    i=$((i+1))
+                done <<< "$networks"
                 ssid_choice=$(whiptail --title "Select WiFi" --menu "Choose SSID" 20 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
                 if [ -z "$ssid_choice" ]; then
                     continue
@@ -131,22 +129,19 @@ wifi_menu() {
                     whiptail --title "WiFi" --msgbox "No password entered." 10 50
                     continue
                 fi
-                # Ajout du réseau à wpa_supplicant
-                network_id=$(wpa_cli add_network | grep -E '^[0-9]+$')
-                wpa_cli set_network "$network_id" ssid "\"$ssid\""
-                wpa_cli set_network "$network_id" psk "\"$password\""
-                wpa_cli enable_network "$network_id"
-                wpa_cli select_network "$network_id"
-                wpa_cli save_config
+                # Ajoute le réseau au fichier wpa_supplicant.conf
+                sudo bash -c "wpa_passphrase \"$ssid\" \"$password\" >> /etc/wpa_supplicant/wpa_supplicant.conf"
+                sudo systemctl restart wpa_supplicant
                 sleep 5
-                if wpa_cli status | grep -q "wpa_state=COMPLETED"; then
+                if iw dev wlan0 link | grep -q "SSID: $ssid"; then
                     whiptail --title "WiFi" --msgbox "Connected to $ssid." 10 50
                 else
                     whiptail --title "WiFi" --msgbox "Failed to connect to $ssid." 10 50
                 fi
                 ;;
             S)
-                wpa_cli disconnect
+                sudo ip link set wlan0 down
+                sudo ip link set wlan0 up
                 whiptail --title "WiFi" --msgbox "WiFi has been disconnected." 10 50
                 ;;
             Q)
@@ -158,8 +153,6 @@ wifi_menu() {
         esac
     done
 }
-
-# ...existing code...
 
 # Sous-menu gestion des appareils Bluetooth
 bluetooth_devices_menu() {
