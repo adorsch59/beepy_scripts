@@ -295,8 +295,7 @@ backlight_menu() {
 
 # Récupération des infos système
 local_ip=$(get_local_ip)
-battery_percent=75%
-
+battery_percent=$(cat /sys/firmware/beepy/battery_percent)
 # Boucle principale
 while true; do
     current_time=$(date +"%H:%M:%S")
