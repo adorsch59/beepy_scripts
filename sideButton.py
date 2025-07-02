@@ -8,8 +8,8 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 ### commands/actions
-BATTERY = '/home/user/./battery.sh'
-BACKLIGHT = 'python /home/user/backlight.py --toggle'
+BATTERY = './battery.sh'
+BACKLIGHT = 'python backlight.py --toggle'
 
 last_press_time = 0
 press_count = 0
