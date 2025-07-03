@@ -10,9 +10,8 @@ helpful scripts for beepy
 
 #1 install sideButton.py as a service
 create /etc/systemd/system/sideButton.service
-```
+`sudo cp sideButton.service /etc/systemd/system/sideButton.service`
 
-```
 `systemctl daemon-reload`
 
 `systemctl enable sideButton.service`
