@@ -45,10 +45,10 @@ display_menu() {
 
     case $display_choix in
         W)
-            display.sh hdmi
+            ./display.sh hdmi
             ;;
         E)
-            display.sh beepy
+            ./display.sh beepy
             ;;
         *)
             whiptail --title "Error" --msgbox "Invalid choice." 10 50
