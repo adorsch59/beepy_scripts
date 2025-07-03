@@ -448,3 +448,6 @@ while true; do
             ;;
         *)
             whiptail --title "Error" --msgbox "Invalid choice." 10 50
+            ;;
+    esac
+done
