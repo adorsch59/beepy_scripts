@@ -1,7 +1,7 @@
 #!/bin/bash
-#pre requis:
-#sudo apt update
-#sudo apt install wpasupplicant wireless-tools iproute2 whiptail
+# Prérequis :
+# sudo apt update
+# sudo apt install wpasupplicant wireless-tools iproute2 whiptail traceroute
 
 # Fonction pour obtenir l'adresse IP locale
 get_local_ip() {
@@ -374,16 +374,67 @@ services_menu() {
     done
 }
 
+# Sous-menu Network > Ping
+network_ping_menu() {
+    ip_to_ping=$(whiptail --title "Ping" --inputbox "Enter IP or hostname to ping:" 10 50 3>&1 1>&2 2>&3)
+    if [ -z "$ip_to_ping" ]; then
+        whiptail --title "Ping" --msgbox "No address entered." 10 50
+        return
+    fi
+    ping_result=$(ping -c 4 "$ip_to_ping" 2>&1)
+    whiptail --title "Ping Result" --msgbox "$ping_result" 20 70
+}
+
+# Sous-menu Network > Traceroute
+network_traceroute_menu() {
+    ip_to_trace=$(whiptail --title "Traceroute" --inputbox "Enter IP or hostname to traceroute:" 10 50 3>&1 1>&2 2>&3)
+    if [ -z "$ip_to_trace" ]; then
+        whiptail --title "Traceroute" --msgbox "No address entered." 10 50
+        return
+    fi
+    traceroute_result=$(traceroute "$ip_to_trace" 2>&1)
+    whiptail --title "Traceroute Result" --msgbox "$traceroute_result" 20 70
+}
+
+# Sous-menu Network
+network_menu() {
+    while true; do
+        network_choice=$(whiptail --title "Network Tools" --menu "Choose a network tool" 12 50 3 \
+        "W" "Ping" \
+        "E" "Traceroute" \
+        "Q" "Back" 3>&1 1>&2 2>&3)
+
+        case $network_choice in
+            W)
+                network_ping_menu
+                ;;
+            E)
+                network_traceroute_menu
+                ;;
+            Q)
+                break
+                ;;
+            *)
+                whiptail --title "Error" --msgbox "Invalid choice." 10 50
+                ;;
+        esac
+    done
+}
+
 # Sous-menu Tools
 tools_menu() {
     while true; do
-        tool_choice=$(whiptail --title "Tools" --menu "Choose a tool" 10 50 2 \
+        tool_choice=$(whiptail --title "Tools" --menu "Choose a tool" 12 50 3 \
         "W" "Services" \
+        "E" "Network" \
         "Q" "Back" 3>&1 1>&2 2>&3)
 
         case $tool_choice in
             W)
                 services_menu
+                ;;
+            E)
+                network_menu
                 ;;
             Q)
                 break
@@ -397,7 +448,7 @@ tools_menu() {
 
 # Récupération des infos système
 local_ip=$(get_local_ip)
-battery_percent=$(cat /sys/firmware/beepy/battery_percent)
+battery_percent=$(cat /sys/firmware/beepy/battery_percent 2>/dev/null)
 
 # Boucle principale
 while true; do
@@ -418,12 +469,12 @@ while true; do
         backlight_menu_label="Backlight [OFF]"
     fi
 
-    choix=$(whiptail --title "$current_time - Battery: $battery_percent% - IP: $local_ip" --menu "Choose an option" 15 50 7 \
+    choix=$(whiptail --title "$current_time - Battery: ${battery_percent:-N/A}% - IP: $local_ip" --menu "Choose an option" 15 50 7 \
     "W" "$wifi_menu_label" \
     "E" "$bluetooth_menu_label" \
     "R" "Display" \
     "S" "$backlight_menu_label" \
-    "T" "Tools" \
+    "D" "Tools" \
     "Q" "Quit" 3>&1 1>&2 2>&3)
 
     case $choix in
@@ -439,7 +490,7 @@ while true; do
         S)
             backlight_menu
             ;;
-        T)
+        D)
             tools_menu
             ;;
         Q)
