@@ -19,7 +19,6 @@ get_current_ssid() {
     sudo wpa_cli -i wlan0 status | grep '^ssid=' | cut -d= -f2
 }
 
-
 # Fonction pour vérifier si le Bluetooth est activé (retourne 0 si ON, 1 si OFF)
 is_bluetooth_on() {
     if bluetoothctl show | grep -q "Powered: yes"; then
@@ -158,6 +157,7 @@ wifi_menu() {
         esac
     done
 }
+
 # Sous-menu gestion des appareils Bluetooth
 bluetooth_devices_menu() {
     while true; do
@@ -309,9 +309,96 @@ backlight_menu() {
     done
 }
 
+# Sous-menu SSHD service management
+sshd_menu() {
+    while true; do
+        sshd_status=$(systemctl is-active ssh 2>/dev/null)
+        case "$sshd_status" in
+            active) status_label="sshd [ON]" ;;
+            inactive) status_label="sshd [OFF]" ;;
+            *) status_label="sshd [UNKNOWN]" ;;
+        esac
+
+        sshd_choice=$(whiptail --title "SSHD Service" --menu "sshd status: $sshd_status" 15 50 5 \
+        "W" "Status" \
+        "E" "Start" \
+        "R" "Stop" \
+        "S" "Restart" \
+        "Q" "Back" 3>&1 1>&2 2>&3)
+
+        case $sshd_choice in
+            W)
+                sshd_status=$(systemctl is-active ssh 2>/dev/null)
+                whiptail --title "SSHD Status" --msgbox "sshd is $sshd_status." 10 50
+                ;;
+            E)
+                sudo systemctl start ssh
+                whiptail --title "SSHD" --msgbox "sshd started." 10 50
+                ;;
+            R)
+                sudo systemctl stop ssh
+                whiptail --title "SSHD" --msgbox "sshd stopped." 10 50
+                ;;
+            S)
+                sudo systemctl restart ssh
+                whiptail --title "SSHD" --msgbox "sshd restarted." 10 50
+                ;;
+            Q)
+                break
+                ;;
+            *)
+                whiptail --title "Error" --msgbox "Invalid choice." 10 50
+                ;;
+        esac
+    done
+}
+
+# Sous-menu Services
+services_menu() {
+    while true; do
+        service_choice=$(whiptail --title "Services" --menu "Choose a service to manage" 10 50 2 \
+        "W" "sshd" \
+        "Q" "Back" 3>&1 1>&2 2>&3)
+
+        case $service_choice in
+            W)
+                sshd_menu
+                ;;
+            Q)
+                break
+                ;;
+            *)
+                whiptail --title "Error" --msgbox "Invalid choice." 10 50
+                ;;
+        esac
+    done
+}
+
+# Sous-menu Tools
+tools_menu() {
+    while true; do
+        tool_choice=$(whiptail --title "Tools" --menu "Choose a tool" 10 50 2 \
+        "W" "Services" \
+        "Q" "Back" 3>&1 1>&2 2>&3)
+
+        case $tool_choice in
+            W)
+                services_menu
+                ;;
+            Q)
+                break
+                ;;
+            *)
+                whiptail --title "Error" --msgbox "Invalid choice." 10 50
+                ;;
+        esac
+    done
+}
+
 # Récupération des infos système
 local_ip=$(get_local_ip)
 battery_percent=$(cat /sys/firmware/beepy/battery_percent)
+
 # Boucle principale
 while true; do
     current_time=$(date +"%H:%M:%S")
@@ -331,11 +418,12 @@ while true; do
         backlight_menu_label="Backlight [OFF]"
     fi
 
-    choix=$(whiptail --title "$current_time - Battery: $battery_percent% - IP: $local_ip" --menu "Choose an option" 15 50 6 \
+    choix=$(whiptail --title "$current_time - Battery: $battery_percent% - IP: $local_ip" --menu "Choose an option" 15 50 7 \
     "W" "$wifi_menu_label" \
     "E" "$bluetooth_menu_label" \
     "R" "Display" \
     "S" "$backlight_menu_label" \
+    "T" "Tools" \
     "Q" "Quit" 3>&1 1>&2 2>&3)
 
     case $choix in
@@ -351,12 +439,12 @@ while true; do
         S)
             backlight_menu
             ;;
+        T)
+            tools_menu
+            ;;
         Q)
             whiptail --title "Goodbye" --msgbox "Goodbye!" 10 50
             exit 0
             ;;
         *)
             whiptail --title "Error" --msgbox "Invalid choice." 10 50
-            ;;
-    esac
-done
