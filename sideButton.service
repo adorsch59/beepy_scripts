@@ -1,0 +1,11 @@
+[Unit]
+Description=SideButton Service
+
+[Service]
+ExecStart=/usr/bin/python /home/user/beepy_scripts/sideButton.py
+Restart=always
+User=user
+WorkingDirectory=/home/user/beepy_scripts
+
+[Install]
+WantedBy=multi-user.target
